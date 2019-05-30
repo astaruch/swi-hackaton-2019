@@ -76,119 +76,103 @@ $(document).ready(function () {
     debug: 'all',
     callback: function () {
       // Use a button to start the demo
-      $('#start').one('click', function () {
-        $(this).attr('disabled', true).unbind('click')
-        // Make sure the browser supports WebRTC
-        if (!Janus.isWebrtcSupported()) {
-          bootbox.alert('No WebRTC support... ')
-          return
-        }
-        // Create session
-        janus = new Janus(
-          {
-            server: server,
-            success: function () {
-              // Attach to video room test plugin
-              janus.attach(
-                {
-                  plugin: 'janus.plugin.videoroom',
-                  opaqueId: opaqueId,
-                  success: function (pluginHandle) {
-                    $('#details').remove()
-                    screentest = pluginHandle
-                    Janus.log('Plugin attached! (' + screentest.getPlugin() + ', id=' + screentest.getId() + ')')
-                    // Prepare the username registration
-                    $('#screenmenu').removeClass('hide').show()
-                    $('#createnow').removeClass('hide').show()
-                    $('#create').click(preShareScreen)
-                    $('#joinnow').removeClass('hide').show()
-                    $('#join').click(joinScreen)
-                    $('#desc').focus()
-                    $('#start').removeAttr('disabled').html('Stop')
-                      .click(function () {
-                        $(this).attr('disabled', true)
-                        janus.destroy()
-                      })
-                  },
-                  error: function (error) {
-                    Janus.error('  -- Error attaching plugin...', error)
-                    bootbox.alert('Error attaching plugin... ' + error)
-                  },
-                  consentDialog: function (on) {
-                    Janus.debug('Consent dialog should be ' + (on ? 'on' : 'off') + ' now')
-                    if (on) {
-                      // Darken screen
-                      $.blockUI({
-                        message: '',
-                        css: {
-                          border: 'none',
-                          padding: '15px',
-                          backgroundColor: 'transparent',
-                          color: '#aaa'
-                        }
-                      })
-                    } else {
-                      // Restore screen
-                      $.unblockUI()
-                    }
-                  },
-                  webrtcState: function (on) {
-                    Janus.log('Janus says our WebRTC PeerConnection is ' + (on ? 'up' : 'down') + ' now')
-                    $('#screencapture').parent().unblock()
-                    if (on) {
-                      bootbox.alert('Your screen sharing session just started: pass the <b>' + room + '</b> session identifier to those who want to attend.')
-                    } else {
-                      bootbox.alert('Your screen sharing session just stopped.', function () {
-                        janus.destroy()
-                        window.location.reload()
-                      })
-                    }
-                  },
-                  onmessage: function (msg, jsep) {
-                    Janus.debug(' ::: Got a message (publisher) :::')
-                    Janus.debug(msg)
-                    var event = msg['videoroom']
-                    Janus.debug('Event: ' + event)
-                    if (event != undefined && event != null) {
-                      if (event === 'joined') {
-                        myid = msg['id']
-                        $('#session').html(room)
-                        $('#title').html(msg['description'])
-                        Janus.log('Successfully joined room ' + msg['room'] + ' with ID ' + myid)
-                        if (role === 'publisher') {
-                          // This is our session, publish our stream
-                          Janus.debug('Negotiating WebRTC stream for our screen (capture ' + capture + ')')
-                          screentest.createOffer(
-                            {
-                              media: { video: capture, audioSend: true, videoRecv: false }, // Screen sharing Publishers are sendonly
-                              success: function (jsep) {
-                                Janus.debug('Got publisher SDP!')
-                                Janus.debug(jsep)
-                                var publish = { 'request': 'configure', 'audio': true, 'video': true }
-                                screentest.send({ 'message': publish, 'jsep': jsep })
-                              },
-                              error: function (error) {
-                                Janus.error('WebRTC error:', error)
-                                bootbox.alert('WebRTC error... ' + JSON.stringify(error))
-                              }
-                            })
-                        } else {
-                          // We're just watching a session, any feed to attach to?
-                          if (msg['publishers'] !== undefined && msg['publishers'] !== null) {
-                            var list = msg['publishers']
-                            Janus.debug('Got a list of available publishers/feeds:')
-                            Janus.debug(list)
-                            for (var f in list) {
-                              var id = list[f]['id']
-                              var display = list[f]['display']
-                              Janus.debug('  >> [' + id + '] ' + display)
-                              newRemoteFeed(id, display)
+      $(this).attr('disabled', true).unbind('click')
+      // Make sure the browser supports WebRTC
+      if (!Janus.isWebrtcSupported()) {
+        bootbox.alert('No WebRTC support... ')
+        return
+      }
+      // Create session
+      janus = new Janus(
+        {
+          server: server,
+          success: function () {
+            // Attach to video room test plugin
+            janus.attach(
+              {
+                plugin: 'janus.plugin.videoroom',
+                opaqueId: opaqueId,
+                success: function (pluginHandle) {
+                  $('#details').remove()
+                  screentest = pluginHandle
+                  Janus.log('Plugin attached! (' + screentest.getPlugin() + ', id=' + screentest.getId() + ')')
+                  // Prepare the username registration
+                  $('#screenmenu').removeClass('hide').show()
+                  $('#createnow').removeClass('hide').show()
+                  $('#create').click(preShareScreen)
+                  $('#joinnow').removeClass('hide').show()
+                  $('#join').click(joinScreen)
+                  $('#start').removeAttr('disabled').html('Stop')
+                    .click(function () {
+                      $(this).attr('disabled', true)
+                      janus.destroy()
+                    })
+                },
+                error: function (error) {
+                  Janus.error('  -- Error attaching plugin...', error)
+                  bootbox.alert('Error attaching plugin... ' + error)
+                },
+                consentDialog: function (on) {
+                  Janus.debug('Consent dialog should be ' + (on ? 'on' : 'off') + ' now')
+                  if (on) {
+                    // Darken screen
+                    $.blockUI({
+                      message: '',
+                      css: {
+                        border: 'none',
+                        padding: '15px',
+                        backgroundColor: 'transparent',
+                        color: '#aaa'
+                      }
+                    })
+                  } else {
+                    // Restore screen
+                    $.unblockUI()
+                  }
+                },
+                webrtcState: function (on) {
+                  Janus.log('Janus says our WebRTC PeerConnection is ' + (on ? 'up' : 'down') + ' now')
+                  $('#screencapture').parent().unblock()
+                  if (on) {
+                    bootbox.alert('Your screen sharing session just started: pass the <b>' + room + '</b> session identifier to those who want to attend.')
+                  } else {
+                    bootbox.alert('Your screen sharing session just stopped.', function () {
+                      janus.destroy()
+                      window.location.reload()
+                    })
+                  }
+                },
+                onmessage: function (msg, jsep) {
+                  Janus.debug(' ::: Got a message (publisher) :::')
+                  Janus.debug(msg)
+                  var event = msg['videoroom']
+                  Janus.debug('Event: ' + event)
+                  if (event != undefined && event != null) {
+                    if (event === 'joined') {
+                      myid = msg['id']
+                      $('#session').html(room)
+                      $('#title').html(msg['description'])
+                      Janus.log('Successfully joined room ' + msg['room'] + ' with ID ' + myid)
+                      if (role === 'publisher') {
+                        // This is our session, publish our stream
+                        Janus.debug('Negotiating WebRTC stream for our screen (capture ' + capture + ')')
+                        screentest.createOffer(
+                          {
+                            media: { video: capture, audioSend: true, videoRecv: false }, // Screen sharing Publishers are sendonly
+                            success: function (jsep) {
+                              Janus.debug('Got publisher SDP!')
+                              Janus.debug(jsep)
+                              var publish = { 'request': 'configure', 'audio': true, 'video': true }
+                              screentest.send({ 'message': publish, 'jsep': jsep })
+                            },
+                            error: function (error) {
+                              Janus.error('WebRTC error:', error)
+                              bootbox.alert('WebRTC error... ' + JSON.stringify(error))
                             }
-                          }
-                        }
-                      } else if (event === 'event') {
-                        // Any feed to attach to?
-                        if (role === 'listener' && msg['publishers'] !== undefined && msg['publishers'] !== null) {
+                          })
+                      } else {
+                        // We're just watching a session, any feed to attach to?
+                        if (msg['publishers'] !== undefined && msg['publishers'] !== null) {
                           var list = msg['publishers']
                           Janus.debug('Got a list of available publishers/feeds:')
                           Janus.debug(list)
@@ -198,76 +182,89 @@ $(document).ready(function () {
                             Janus.debug('  >> [' + id + '] ' + display)
                             newRemoteFeed(id, display)
                           }
-                        } else if (msg['leaving'] !== undefined && msg['leaving'] !== null) {
-                          // One of the publishers has gone away?
-                          var leaving = msg['leaving']
-                          Janus.log('Publisher left: ' + leaving)
-                          if (role === 'listener' && msg['leaving'] === source) {
-                            bootbox.alert('The screen sharing session is over, the publisher left', function () {
-                              window.location.reload()
-                            })
-                          }
-                        } else if (msg['error'] !== undefined && msg['error'] !== null) {
-                          bootbox.alert(msg['error'])
                         }
                       }
-                    }
-                    if (jsep !== undefined && jsep !== null) {
-                      Janus.debug('Handling SDP as well...')
-                      Janus.debug(jsep)
-                      screentest.handleRemoteJsep({ jsep: jsep })
-                    }
-                  },
-                  onlocalstream: function (stream) {
-                    Janus.debug(' ::: Got a local stream :::')
-                    Janus.debug(stream)
-                    $('#screenmenu').hide()
-                    $('#room').removeClass('hide').show()
-                    if ($('#screenvideo').length === 0) {
-                      $('#screencapture').append('<video class="rounded centered" id="screenvideo" width="100%" height="100%" autoplay playsinline muted="muted"/>')
-                    }
-                    Janus.attachMediaStream($('#screenvideo').get(0), stream)
-                    if (screentest.webrtcStuff.pc.iceConnectionState !== 'completed' &&
-                      screentest.webrtcStuff.pc.iceConnectionState !== 'connected') {
-                      $('#screencapture').parent().block({
-                        message: '<b>Publishing...</b>',
-                        css: {
-                          border: 'none',
-                          backgroundColor: 'transparent',
-                          color: 'white'
+                    } else if (event === 'event') {
+                      // Any feed to attach to?
+                      if (role === 'listener' && msg['publishers'] !== undefined && msg['publishers'] !== null) {
+                        var list = msg['publishers']
+                        Janus.debug('Got a list of available publishers/feeds:')
+                        Janus.debug(list)
+                        for (var f in list) {
+                          var id = list[f]['id']
+                          var display = list[f]['display']
+                          Janus.debug('  >> [' + id + '] ' + display)
+                          newRemoteFeed(id, display)
                         }
-                      })
+                      } else if (msg['leaving'] !== undefined && msg['leaving'] !== null) {
+                        // One of the publishers has gone away?
+                        var leaving = msg['leaving']
+                        Janus.log('Publisher left: ' + leaving)
+                        if (role === 'listener' && msg['leaving'] === source) {
+                          bootbox.alert('The screen sharing session is over, the publisher left', function () {
+                            window.location.reload()
+                          })
+                        }
+                      } else if (msg['error'] !== undefined && msg['error'] !== null) {
+                        bootbox.alert(msg['error'])
+                      }
                     }
-                  },
-                  onremotestream: function (stream) {
-                    // The publisher stream is sendonly, we don't expect anything here
-                  },
-                  oncleanup: function () {
-                    Janus.log(' ::: Got a cleanup notification :::')
-                    $('#screencapture').empty()
-                    $('#screencapture').parent().unblock()
-                    $('#room').hide()
                   }
-                })
-            },
-            error: function (error) {
-              Janus.error(error)
-              bootbox.alert(error, function () {
-                window.location.reload()
+                  if (jsep !== undefined && jsep !== null) {
+                    Janus.debug('Handling SDP as well...')
+                    Janus.debug(jsep)
+                    screentest.handleRemoteJsep({ jsep: jsep })
+                  }
+                },
+                onlocalstream: function (stream) {
+                  Janus.debug(' ::: Got a local stream :::')
+                  Janus.debug(stream)
+                  $('#screenmenu').hide()
+                  $('#room').removeClass('hide').show()
+                  if ($('#screenvideo').length === 0) {
+                    $('#screencapture').append('<video class="rounded centered" id="screenvideo" width="100%" height="100%" autoplay playsinline muted="muted"/>')
+                  }
+                  Janus.attachMediaStream($('#screenvideo').get(0), stream)
+                  if (screentest.webrtcStuff.pc.iceConnectionState !== 'completed' &&
+                    screentest.webrtcStuff.pc.iceConnectionState !== 'connected') {
+                    $('#screencapture').parent().block({
+                      message: '<b>Publishing...</b>',
+                      css: {
+                        border: 'none',
+                        backgroundColor: 'transparent',
+                        color: 'white'
+                      }
+                    })
+                  }
+                },
+                onremotestream: function (stream) {
+                  // The publisher stream is sendonly, we don't expect anything here
+                },
+                oncleanup: function () {
+                  Janus.log(' ::: Got a cleanup notification :::')
+                  $('#screencapture').empty()
+                  $('#screencapture').parent().unblock()
+                  $('#room').hide()
+                }
               })
-            },
-            destroyed: function () {
+          },
+          error: function (error) {
+            Janus.error(error)
+            bootbox.alert(error, function () {
               window.location.reload()
-            }
-          })
-      })
+            })
+          },
+          destroyed: function () {
+            window.location.reload()
+          }
+        })
     }
   })
 })
 
 function checkEnterShare(field, event) {
   var theCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode
-  if (theCode == 13) {
+  if (theCode === 13) {
     preShareScreen()
     return false
   } else {
@@ -284,18 +281,9 @@ function preShareScreen() {
     return
   }
   // Create a new room
-  $('#desc').attr('disabled', true)
   $('#create').attr('disabled', true).unbind('click')
   $('#roomid').attr('disabled', true)
   $('#join').attr('disabled', true).unbind('click')
-  if ($('#desc').val() === '') {
-    bootbox.alert('Please insert a description for the room')
-    $('#desc').removeAttr('disabled', true)
-    $('#create').removeAttr('disabled', true).click(preShareScreen)
-    $('#roomid').removeAttr('disabled', true)
-    $('#join').removeAttr('disabled', true).click(joinScreen)
-    return
-  }
   capture = 'screen'
   if (navigator.mozGetUserMedia) {
     // Firefox needs a different constraint for screen and window sharing
@@ -321,7 +309,6 @@ function preShareScreen() {
         }
       },
       onEscape: function () {
-        $('#desc').removeAttr('disabled', true)
         $('#create').removeAttr('disabled', true).click(preShareScreen)
         $('#roomid').removeAttr('disabled', true)
         $('#join').removeAttr('disabled', true).click(joinScreen)
@@ -334,7 +321,7 @@ function preShareScreen() {
 
 function shareScreen() {
   // Create a new room
-  var desc = $('#desc').val()
+  var desc = 'Solarwinds hackaton sharing room'
   role = 'publisher'
   var create = { 'request': 'create', 'description': desc, 'bitrate': 500000, 'publishers': 1 }
   screentest.send({
@@ -342,7 +329,7 @@ function shareScreen() {
     success: function (result) {
       var event = result['videoroom']
       Janus.debug('Event: ' + event)
-      if (event != undefined && event != null) {
+      if (event !== undefined && event != null) {
         // Our own screen sharing session has been created, join it
         room = result['room']
         Janus.log('Screen sharing session created: ' + room)
@@ -387,14 +374,12 @@ function checkEnterJoin(field, event) {
 
 function joinScreen() {
   // Join an existing screen sharing session
-  $('#desc').attr('disabled', true)
   $('#create').attr('disabled', true).unbind('click')
   $('#roomid').attr('disabled', true)
   $('#join').attr('disabled', true).unbind('click')
   var roomid = $('#roomid').val()
   if (isNaN(roomid)) {
     bootbox.alert('Session identifiers are numeric only')
-    $('#desc').removeAttr('disabled', true)
     $('#create').removeAttr('disabled', true).click(preShareScreen)
     $('#roomid').removeAttr('disabled', true)
     $('#join').removeAttr('disabled', true).click(joinScreen)
