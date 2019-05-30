@@ -5,6 +5,9 @@
   ],
   "globals": {
     "fetch": false,
-    "it": false
+    "it": false,
+    "Janus": false,
+    "$": false,
+    "bootbox": false
   }
 }

@@ -1,3 +1,33 @@
+
+# Web screen sharing (Hackaton 2019)
+
+#### Attended screen sharing without agent or plugin from WIN, MAC, LIN platforms. Utilize knowledge gained during video chat development (WebRTC framework) and create free screen sharing cooperation tool similar to https://www.join.me
+
+## Steps to start this project
+
+> Preparing the Janus server through [Docker image](https://github.com/atyenoria/janus-webrtc-gateway-docker)
+
+1. git clone https://github.com/atyenoria/janus-webrtc-gateway-docker.git && cd janus-webrtc-gateway-docker
+1. docker build -t atyenoria/janus-webrtc-gateway-docker .
+1. docker run --rm -p 80:80 -p 8088:8088 -p 8188:8188 --name="janus" -it -t atyenoria/janus-webrtc-gateway-docker
+
+
+        Janus commit: ddbf37fef43ade61d73173c7661a2449c13582d4
+        Compiled on:  Thu May 30 11:41:13 UTC 2019
+
+        ---------------------------------------------------
+        Starting Meetecho Janus (WebRTC Server) v0.6.2
+        ---------------------------------------------------
+
+Now we should see after accessing `localhost:8088` something in standard output from docker run.
+
+    [ERR] [transports/janus_http.c:janus_http_handler:1225] Invalid url /
+
+
+
+---------------
+
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
