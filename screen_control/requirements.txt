@@ -1,0 +1,3 @@
+websocket-client==0.48.0
+PyAutoGUI==0.9.38
+PyInstaller==3.4

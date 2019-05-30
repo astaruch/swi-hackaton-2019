@@ -1,0 +1,1 @@
+$ pyinstaller screen_control.py --onefile
