@@ -70,10 +70,6 @@ function randomString(len, charSet) {
   return randomString
 }
 
-function moveMouseHnd(e) {
-  console.log('location: ', e.clientX, e.clientY)
-}
-
 $(document).ready(function () {
   // Initialize the library (all console debuggers enabled)
   Janus.init({
@@ -427,7 +423,21 @@ function joinScreen() {
   }
 
   $('#screencapture').mousemove(function (e) {
-    const msg = `${e.clientX} ${e.clientY}`
+    // TODO: we are expecting that we are sharing 1920x1080
+    const offsets = $('#screencapture').offset()
+    const x = e.clientX - offsets.left
+    const y = e.clientY - offsets.top
+
+    const originalX = 1920
+    const originalY = 1080
+
+    const divX = $('#screencapture').width()
+    const divY = $('#screencapture').height()
+
+    const scalingX = originalX / divX
+    const scalingY = originalY / divY
+
+    const msg = `${x * scalingX} ${y * scalingY}`
     ws.send(msg)
     console.log(`sending ${msg}`)
   })
