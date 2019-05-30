@@ -280,6 +280,7 @@ function checkEnterShare(field, event) {
 }
 
 function preShareScreen() {
+  console.log('PRESHARE SCREEN')
   if (!Janus.isExtensionEnabled()) {
     bootbox.alert("You're using Chrome but don't have the screensharing extension installed: click <b><a href='https://chrome.google.com/webstore/detail/janus-webrtc-screensharin/hapfgfdkleiggjjpfpenajgdnfckjpaj' target='_blank'>here</a></b> to do so", function () {
       window.location.reload()
@@ -355,6 +356,27 @@ function shareScreen() {
       }
     }
   })
+  if ('WebSocket' in window) {
+    console.log('Connecting to WebSocket server to receive mouse coordinates')
+    var ws = new WebSocket('ws://' + window.location.hostname + ':9999')
+
+    ws.onopen = function () {
+      console.log('WebSocket opened')
+    }
+
+    ws.onmessage = function (evt) {
+      var coordinates = evt.data.split(' ')
+      const x = coordinates[0]
+      const y = coordinates[1]
+      console.log(`x: ${x}, y: ${y}`)
+    }
+
+    ws.onclose = function () {
+      console.log('Websocket is closed')
+    }
+  } else {
+    console.error('WEB SOCKETS ARE NOT SUPPORTED')
+  }
 }
 
 function checkEnterJoin(field, event) {
@@ -387,6 +409,28 @@ function joinScreen() {
   myusername = randomString(12)
   var register = { 'request': 'join', 'room': room, 'ptype': 'publisher', 'display': myusername }
   screentest.send({ 'message': register })
+  console.log('JOINED THE SCREEN')
+
+  if ('WebSocket' in window) {
+    console.log('Connecting to WebSocket server to send mouse coordinates')
+    var ws = new WebSocket('ws://' + window.location.hostname + ':9999')
+
+    ws.onopen = function () {
+      console.log('WebSocket opened')
+    }
+
+    ws.onclose = function () {
+      console.log('WebSocket is closed')
+    }
+  } else {
+    console.error('WEB SOCKETS ARE NOT SUPPORTED')
+  }
+
+  $('#screencapture').mousemove(function (e) {
+    const msg = `${e.clientX} ${e.clientY}`
+    ws.send(msg)
+    console.log(`sending ${msg}`)
+  })
 }
 
 function newRemoteFeed(id, display) {
@@ -456,7 +500,6 @@ function newRemoteFeed(id, display) {
       },
 
       onremotestream: function (stream) {
-        console.log('asgasga')
         if ($('#screenvideo').length === 0) {
           // No remote video yet
           $('#screencapture').append('<video class="rounded centered" id="waitingvideo" width="100%" height="100%" />')

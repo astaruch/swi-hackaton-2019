@@ -18,14 +18,6 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script type="text/javascript" src="janus.js"></script>
     <script type="text/javascript" src="screensharingtest.js"></script>
-    <script>
-        $(function () {
-            $(".navbar-static-top").load("navbar.html", function () {
-                $(".navbar-static-top li.dropdown").addClass("active");
-                $(".navbar-static-top a[href='screensharingtest.html']").parent().addClass("active");
-            });
-            $(".footer").load("footer.html");
-        });
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cerulean/bootstrap.min.css"
         type="text/css" />
@@ -84,7 +76,7 @@
                                             id="title"></span> <span class="label label-success" id="session"></span>
                                     </h3>
                                 </div>
-                                <div class="panel-body" id="screencapture" onmousemove="moveMouseHnd(event)"></div>
+                                <div class="panel-body" id="screencapture"></div>
                             </div>
                         </div>
                     </div>
