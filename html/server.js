@@ -9,7 +9,7 @@ const httpServerPort = process.env.PORT || 8080
 
 httpServer.use(express.static(__dirname))
 httpServer.listen(httpServerPort)
-console.dir(`Available on: http://${ip.address()}:${httpServerPort}`)
+console.dir(`Available on: http://10.140.126.135:${httpServerPort}`)
 
 const wsPort = process.env.WSPORT || 9999
 const wss = new WebSocketServer({

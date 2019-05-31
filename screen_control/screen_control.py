@@ -59,7 +59,7 @@ def key_up(key_name):
     pyautogui.keyUp(key_name)
 
 def on_message(ws, message):
-    # print(message)
+    print(message)
     data = message.split(' ')
     a = data[0] # action
     if a == 'move':
@@ -87,7 +87,7 @@ def on_close(ws):
 
 if __name__ == "__main__":
     websocket.enableTrace(True)
-    ws = websocket.WebSocketApp("ws://localhost:9999/",
+    ws = websocket.WebSocketApp("ws://10.140.126.135:9999/",
                               on_message = on_message,
                               on_error = on_error,
                               on_close = on_close)
