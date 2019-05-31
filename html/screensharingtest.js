@@ -70,6 +70,22 @@ function randomString(len, charSet) {
   return randomString
 }
 
+function throttle(fn, delay) {
+  var timer;
+  return function () {
+    var last = timer;
+    var now = Date.now();
+    if (!last) {
+      timer = now;
+      fn.apply(this, arguments);
+      return;
+    }
+    if (last + delay > now) return;
+    timer = now;
+    fn.apply(this, arguments);
+  }
+}
+
 $(document).ready(function () {
   // Initialize the library (all console debuggers enabled)
   Janus.init({
@@ -199,6 +215,9 @@ $(document).ready(function () {
                       } else if (msg['leaving'] !== undefined && msg['leaving'] !== null) {
                         // One of the publishers has gone away?
                         var leaving = msg['leaving']
+                        const liId = '#cl-' + leaving
+                        $(liId).remove()
+                        console.log(msg)
                         Janus.log('Publisher left: ' + leaving)
                         if (role === 'listener' && msg['leaving'] === source) {
                           bootbox.alert('The screen sharing session is over, the publisher left', function () {
@@ -207,6 +226,11 @@ $(document).ready(function () {
                         }
                       } else if (msg['error'] !== undefined && msg['error'] !== null) {
                         bootbox.alert(msg['error'])
+                      } else if (msg['joining'] !== undefined) {
+                        const newClient = msg['joining']
+                        const clientId = 'cl-' + newClient.id
+                        $('#subscribers').append('<li id=\'' + clientId + '\'>' + newClient.display + '</li>')
+                        console.log(newClient)
                       }
                     }
                   }
@@ -323,7 +347,7 @@ function shareScreen() {
   // Create a new room
   var desc = 'Solarwinds hackaton sharing room'
   role = 'publisher'
-  var create = { 'request': 'create', 'description': desc, 'bitrate': 500000, 'publishers': 1 }
+  var create = { 'request': 'create', 'description': desc, 'bitrate': 500000, 'publishers': 1, 'notify_joining': true }
   screentest.send({
     'message': create,
     success: function (result) {
@@ -333,33 +357,34 @@ function shareScreen() {
         // Our own screen sharing session has been created, join it
         room = result['room']
         Janus.log('Screen sharing session created: ' + room)
-        myusername = randomString(12)
+        myusername = `${window.location.hostname + '-' + randomString(3)}`
+
         var register = { 'request': 'join', 'room': room, 'ptype': 'publisher', 'display': myusername }
         screentest.send({ 'message': register })
       }
     }
   })
-  if ('WebSocket' in window) {
-    console.log('Connecting to WebSocket server to receive mouse coordinates')
-    var ws = new WebSocket('ws://' + window.location.hostname + ':9999')
+  //   if ('WebSocket' in window) {
+  //     console.log('Connecting to WebSocket server to receive mouse coordinates')
+  //     var ws = new WebSocket('ws://' + window.location.hostname + ':9999')
 
-    ws.onopen = function () {
-      console.log('WebSocket opened')
-    }
+  //     ws.onopen = function () {
+  //       console.log('WebSocket opened')
+  //     }
 
-    ws.onmessage = function (evt) {
-      var coordinates = evt.data.split(' ')
-      const x = coordinates[0]
-      const y = coordinates[1]
-      console.log(`x: ${x}, y: ${y}`)
-    }
+  //     ws.onmessage = function (evt) {
+  //       var coordinates = evt.data.split(' ')
+  //       const x = coordinates[0]
+  //       const y = coordinates[1]
+  //       console.log(`x: ${x}, y: ${y}`)
+  //     }
 
-    ws.onclose = function () {
-      console.log('Websocket is closed')
-    }
-  } else {
-    console.error('WEB SOCKETS ARE NOT SUPPORTED')
-  }
+  //     ws.onclose = function () {
+  //       console.log('Websocket is closed')
+  //     }
+  //   } else {
+  //     console.error('WEB SOCKETS ARE NOT SUPPORTED')
+  //   }
 }
 
 function checkEnterJoin(field, event) {
@@ -387,7 +412,7 @@ function joinScreen() {
   }
   room = parseInt(roomid)
   role = 'listener'
-  myusername = randomString(12)
+  myusername = $('#username').val()
   var register = { 'request': 'join', 'room': room, 'ptype': 'publisher', 'display': myusername }
   screentest.send({ 'message': register })
   console.log('JOINED THE SCREEN')
@@ -407,7 +432,9 @@ function joinScreen() {
     console.error('WEB SOCKETS ARE NOT SUPPORTED')
   }
 
-  $('#screencapture').mousemove(function (e) {
+  $('#screencapture').focus()
+
+  $('#screencapture').mousemove(_.throttle(function (e) {
     // TODO: we are expecting that we are sharing 1920x1080
     const offsets = $('#screencapture').offset()
     const x = e.clientX - offsets.left
@@ -422,9 +449,45 @@ function joinScreen() {
     const scalingX = originalX / divX
     const scalingY = originalY / divY
 
-    const msg = `${x * scalingX} ${y * scalingY}`
+    const msg = `move ${x * scalingX} ${y * scalingY}`
     ws.send(msg)
-    console.log(`sending ${msg}`)
+    console.log(msg)
+  }, 50))
+
+  $('#screencapture').mouseup(function (e) {
+    const msg = `mouseup`
+    ws.send(msg)
+    console.log(msg)
+  })
+
+  $('#screencapture').mousedown(function (e) {
+    const msg = `mousedown`
+    ws.send(msg)
+    console.log(msg)
+  })
+
+  // $('#screencapture').click(function () {
+  //   const msg = 'click'
+  //   ws.send(msg)
+  //   console.log(msg)
+  // })
+
+  // $('#screencapture').dblclick(function () {
+  //   const msg = 'doubleclick'
+  //   ws.send(msg)
+  //   console.log(msg)
+  // })
+
+  $('#screencapture').bind('keydown', function (e) {
+    const msg = `keydown ${e.key === ' ' ? 'space' : e.key.toLowerCase()}`
+    ws.send(msg)
+    console.log(msg)
+  })
+
+  $('#screencapture').bind('keyup', function (e) {
+    const msg = `keyup ${e.key === ' ' ? 'space' : e.key.toLowerCase()}`
+    ws.send(msg)
+    console.log(msg)
   })
 }
 
@@ -449,6 +512,7 @@ function newRemoteFeed(id, display) {
         bootbox.alert('Error attaching plugin... ' + error)
       },
       onmessage: function (msg, jsep) {
+        console.log('MESSAGE')
         Janus.debug(' ::: Got a message (listener) :::')
         Janus.debug(msg)
         var event = msg['videoroom']

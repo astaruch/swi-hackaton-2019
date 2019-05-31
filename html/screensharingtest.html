@@ -18,6 +18,9 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script type="text/javascript" src="janus.js"></script>
     <script type="text/javascript" src="screensharingtest.js"></script>
+    <script type="text/javascript"
+        src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore-min.js"></script>
+
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/cerulean/bootstrap.min.css"
         type="text/css" />
@@ -55,6 +58,7 @@
                     <div class="row">
                         <div class="input-group margin-bottom-md hide" id="joinnow">
                             <span class="input-group-addon"><i class="fa fa-play-circle-o fa-1"></i></span>
+                            <input class="form-control" type="text" placeholder="Enter your name" id="username"></input>
                             <input class="form-control" type="text" placeholder="Insert the numeric session identifier"
                                 autocomplete="off" id="roomid" onkeypress="return checkEnterJoin(this, event);"></input>
                             <span class="input-group-btn">
@@ -73,9 +77,13 @@
                                             id="title"></span> <span class="label label-success" id="session"></span>
                                     </h3>
                                 </div>
-                                <div class="panel-body" id="screencapture"></div>
+                                <div class="panel-body" tabindex="0" id="screencapture"></div>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
+                        <ul class="panel-body" id="subscribers">
+                        </ul>
                     </div>
                 </div>
             </div>

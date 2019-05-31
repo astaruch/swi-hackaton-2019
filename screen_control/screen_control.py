@@ -10,7 +10,7 @@ except ImportError:
 import time
 
 def move_mouse(x, y):
-    print('move_mouse', x, y)
+    # print('move_mouse', x, y)
     pyautogui.moveTo(x, y)
     return
 
@@ -59,15 +59,18 @@ def key_up(key_name):
     pyautogui.keyUp(key_name)
 
 def on_message(ws, message):
-    print(message)
+    # print(message)
     data = message.split(' ')
     a = data[0] # action
-    if a == 'move': move_mouse(int(data[1]), int(data[2]))
+    if a == 'move':
+        x = int(float(data[1]))
+        y = int(float(data[2]))
+        move_mouse(x, y)
     elif a == 'click': left_click()
     elif a == 'rightclick': right_click()
     elif a == 'doubleclick': double_click()
     elif a == 'middleclick': middle_click()
-    elif a == 'scroll': scroll(int(data[1]))
+    elif a == 'scroll': scroll(int(float(data[1])))
     elif a == 'mousedown': mouse_down()
     elif a == 'mouseup': mouse_up()
     elif a == 'copy': copy()

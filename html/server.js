@@ -34,7 +34,7 @@ wss.on('connection', (ws, req) => {
     console.log('Connected client')
     clients.push(ws)
     ws.on('message', message => {
-      console.log(`Sending: ${message}`)
+      // console.log(`Sending: ${message}`)
       master.send(message)
     })
   }
