@@ -38,4 +38,9 @@ wss.on('connection', (ws, req) => {
       master.send(message)
     })
   }
+
+  master.on('close', () => {
+    console.log('Master disconnected')
+    master = null
+  })
 })
